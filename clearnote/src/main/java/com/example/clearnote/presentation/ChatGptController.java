@@ -16,9 +16,9 @@ public class ChatGptController {
 
     @PostMapping("/summarize")
     public ChatGptDto.SummaryResponse summarizeMeeting(
-            @RequestParam("meetingText") String meetingText,
-            @RequestParam("template") MultipartFile template) {
+            @RequestParam("meetingAudio") MultipartFile meetingAudio,
+            @RequestParam("meetingTemplate") MultipartFile meetingTemplate) {
         // Service로 요청을 넘겨 응답을 반환
-        return chatGptService.summarizeMeeting(meetingText, template);
+        return chatGptService.summarizeMeeting(meetingAudio, meetingTemplate);
     }
 }

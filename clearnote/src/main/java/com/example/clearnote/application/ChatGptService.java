@@ -20,6 +20,7 @@ public class ChatGptService {
     private final String model;
     private final String apiURL;
     private final RestTemplate restTemplate;
+    private final SttService sttService;
     //private final String prompt = "아래 텍스트는 회의 음성 녹음을 텍스트로 바꾼 거야. 아래 파일은 해당 회의 내용을 기록할 회의록 양식 pdf 파일이야. 이 회의 내용을 회의록 양식에 있는 내용을 중심으로 요약해줘. 회의에서 나온 정보를 최대한 자세하게 기록해줘.\\n ";
     private final String prompt =
             "###Role###\n" +
@@ -39,17 +40,21 @@ public class ChatGptService {
             "Note: The meeting template will be provided as a separate file. Please base your summary on that template.";
 
 
-    public ChatGptService(@Value("${openai.model}") String model, @Value("${openai.api.url}") String apiURL, RestTemplate restTemplate){
+    public ChatGptService(@Value("${openai.model}") String model, @Value("${openai.api.url}") String apiURL, RestTemplate restTemplate, SttService sttService){
         this.model = model;
         this.apiURL = apiURL;
         this.restTemplate = restTemplate;
+        this.sttService = sttService;
     }
 
-    public ChatGptDto.SummaryResponse summarizeMeeting(String meetingText, MultipartFile template) {
+    public ChatGptDto.SummaryResponse summarizeMeeting(MultipartFile meetingAudio, MultipartFile meetingTemplate) {
+
+        String meetingText = sttService.sendAudioToPythonServer(meetingAudio);
+
+        System.out.println(meetingText);
 
         String finalText = String.format(prompt, meetingText);
-
-        String image = encodeFileToBase64Url(template);
+        String image = encodeFileToBase64Url(meetingTemplate);
         ChatGptDto.ImageUrl imageUrl = new ChatGptDto.ImageUrl(image, "high");
         ChatGptDto.RequestTextContent textContent = new ChatGptDto.RequestTextContent("text", finalText);
         ChatGptDto.RequestImageContent templateContent = new ChatGptDto.RequestImageContent("image_url", imageUrl);
