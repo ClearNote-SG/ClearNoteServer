@@ -24,11 +24,11 @@ import org.springframework.web.multipart.MultipartFile;
 public class MeetingMinuteController {
     private final MeetingMinuteService meetingMinuteService;
 
-    @PostMapping
+   /*@PostMapping
     public ResponseEntity<MeetingMinute> addMeetingMinute(@RequestBody MultipartFile voiceFile)
             throws IOException {
         return ResponseEntity.ok(meetingMinuteService.upload(voiceFile));
-    };
+    };*/
 
     @GetMapping("/{date}")
     public ResponseEntity<Map<Integer, List<ResponseMeetingDto>>> getAllMeetingMinutesByDate(@PathVariable LocalDate date) {
