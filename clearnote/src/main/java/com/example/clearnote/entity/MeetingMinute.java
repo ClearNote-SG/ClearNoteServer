@@ -30,5 +30,8 @@ public class MeetingMinute extends BaseEntity {
     private String summary;
 
     @Lob
+    private byte[] imageFile;
+
+    @Lob
     private byte[] audioFile;
 }

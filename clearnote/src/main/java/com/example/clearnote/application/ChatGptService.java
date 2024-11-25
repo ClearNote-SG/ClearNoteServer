@@ -2,7 +2,11 @@ package com.example.clearnote.application;
 
 import com.example.clearnote.dto.ChatGptDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -21,6 +25,7 @@ public class ChatGptService {
     private final String apiURL;
     private final RestTemplate restTemplate;
     private final SttService sttService;
+    private final MeetingMinuteService meetingMinuteService;
     //private final String prompt = "아래 텍스트는 회의 음성 녹음을 텍스트로 바꾼 거야. 아래 파일은 해당 회의 내용을 기록할 회의록 양식 pdf 파일이야. 이 회의 내용을 회의록 양식에 있는 내용을 중심으로 요약해줘. 회의에서 나온 정보를 최대한 자세하게 기록해줘.\\n ";
     private final String prompt =
             "###Role###\n" +
@@ -39,51 +44,114 @@ public class ChatGptService {
             "Here is the meeting transcript:\n[%s]\n\n" +
             "Note: The meeting template will be provided as a separate file. Please base your summary on that template.";
 
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ImageUrl {
 
-    public ChatGptService(@Value("${openai.model}") String model, @Value("${openai.api.url}") String apiURL, RestTemplate restTemplate, SttService sttService){
+        private String url;
+        private String detail;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RequestTextContent {
+        private String type;       // "text" 또는 "image_url"
+        private String text;        // 텍스트 데이터
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RequestImageContent {
+        private String type;       // "text" 또는 "image_url"
+        private ImageUrl image_url;   // 이미지 URL 데이터 (Base64 인코딩 포함)
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RequestMessage {
+        private String role;
+        private List<Object> content;
+    }
+
+    @Data
+    public static class ChatGptRequest {
+        private String model;
+        private List<RequestMessage> messages;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ResponseMessage {
+        private String role;
+        private String content;
+
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Choice {
+        private int index;
+        private ResponseMessage message;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ChatGptResponse {
+        private List<Choice> choices;
+
+    }
+
+    public ChatGptService(@Value("${openai.model}") String model, @Value("${openai.api.url}") String apiURL, @Qualifier("openAiTemplate") RestTemplate restTemplate, SttService sttService, MeetingMinuteService meetingMinuteService){
         this.model = model;
         this.apiURL = apiURL;
         this.restTemplate = restTemplate;
         this.sttService = sttService;
+        this.meetingMinuteService = meetingMinuteService;
     }
 
-    public ChatGptDto.SummaryResponse summarizeMeeting(MultipartFile meetingAudio, MultipartFile meetingTemplate) {
+    public ChatGptDto.SummaryResponse summarizeMeeting(Long id, MultipartFile meetingAudio, MultipartFile meetingTemplate) {
+   //public ChatGptDto.SummaryResponse summarizeMeeting(String meetingText, MultipartFile meetingTemplate) {
+        String meetingText = sttService.transcribe(meetingAudio);
 
-        String meetingText = sttService.sendAudioToPythonServer(meetingAudio);
-
-        System.out.println(meetingText);
+        //System.out.println(meetingText);
 
         String finalText = String.format(prompt, meetingText);
         String image = encodeFileToBase64Url(meetingTemplate);
-        ChatGptDto.ImageUrl imageUrl = new ChatGptDto.ImageUrl(image, "high");
-        ChatGptDto.RequestTextContent textContent = new ChatGptDto.RequestTextContent("text", finalText);
-        ChatGptDto.RequestImageContent templateContent = new ChatGptDto.RequestImageContent("image_url", imageUrl);
+        ImageUrl imageUrl = new ImageUrl(image, "high");
+        RequestTextContent textContent = new RequestTextContent("text", finalText);
+        RequestImageContent templateContent = new RequestImageContent("image_url", imageUrl);
 
-        ChatGptDto.RequestMessage message = new ChatGptDto.RequestMessage();
+        RequestMessage message = new RequestMessage();
         message.setRole("user");
         message.setContent(List.of(textContent, templateContent));
 
-        ChatGptDto.ChatGptRequest chatGptRequest = new ChatGptDto.ChatGptRequest();
+        ChatGptRequest chatGptRequest = new ChatGptRequest();
         chatGptRequest.setModel(model);
         chatGptRequest.setMessages(List.of(message));
 
         try {
             // OpenAI API에 POST 요청을 보냄
-            ChatGptDto.ChatGptResponse chatGptResponse = restTemplate.postForObject(apiURL, chatGptRequest, ChatGptDto.ChatGptResponse.class);
+            ChatGptResponse chatGptResponse = restTemplate.postForObject(apiURL, chatGptRequest, ChatGptResponse.class);
             // 응답에서 첫 번째 메시지를 추출하여 반환
             String gptResponse = chatGptResponse.getChoices().get(0).getMessage().getContent();
             System.out.println(gptResponse);
             String title = extractSection("Meeting Title:", "**",  gptResponse);
             String summary = extractSection("Meeting Summary:", "---", gptResponse);
 
+            meetingMinuteService.updateMeetingMinute(id, title, meetingText, summary);
             return new ChatGptDto.SummaryResponse(title, summary);
             //return chatGptResponse.getChoices().get(0).getMessage().getContent();
         } catch (NullPointerException | IndexOutOfBoundsException e) {
             // 응답이 null이거나 비어있을 경우
             return new ChatGptDto.SummaryResponse("요약 요청 중 오류 발생: ", e.getMessage());
         }
-
-
     }
 
     // PDF 파일을 Base64로 인코딩하여 URL 형식으로 반환
