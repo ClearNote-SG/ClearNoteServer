@@ -18,17 +18,19 @@ public class ChatGptController {
 
     @PostMapping("/summarize")
     public ChatGptDto.SummaryResponse summarizeMeeting(
-            @RequestParam("meetingAudio") MultipartFile meetingAudio,
+            @RequestParam("meetingId") Long id,
             @RequestParam("meetingTemplate") MultipartFile meetingTemplate) {
         // Service로 요청을 넘겨 응답을 반환
-        Long id = meetingMinuteService.createMeetingMinute();
-        meetingMinuteService.uploadMeetingMinute(id, meetingAudio, meetingTemplate);
+        //Long id = meetingMinuteService.createMeetingMinute();
+        //meetingMinuteService.uploadMeetingMinute(id, meetingAudio, meetingTemplate);
+        //MultipartFile meetingAudio = meetingMinuteService.getMeetingMinute(id).getAudioFile();
+        byte[] meetingAudio = meetingMinuteService.getMeetingMinute(id).getAudioFile();
         return chatGptService.summarizeMeeting(id, meetingAudio, meetingTemplate);
     }
     /*public ChatGptDto.SummaryResponse summarizeMeeting(
             @RequestParam("meetingText") String meetingText,
             @RequestParam("meetingTemplate") MultipartFile meetingTemplate) {
         // Service로 요청을 넘겨 응답을 반환
-        return chatGptService.summarizeMeeting(meetingText, meetingTemplate);
+        return chatGptService.summarizeMeeting(meeting  Text, meetingTemplate);
     }*/
 }

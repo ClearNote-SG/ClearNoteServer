@@ -116,9 +116,9 @@ public class ChatGptService {
         this.meetingMinuteService = meetingMinuteService;
     }
 
-    public ChatGptDto.SummaryResponse summarizeMeeting(Long id, MultipartFile meetingAudio, MultipartFile meetingTemplate) {
+    public ChatGptDto.SummaryResponse summarizeMeeting(Long id, byte[] meetingAudio, MultipartFile meetingTemplate) {
    //public ChatGptDto.SummaryResponse summarizeMeeting(String meetingText, MultipartFile meetingTemplate) {
-        String meetingText = sttService.transcribe(meetingAudio);
+        String meetingText = meetingMinuteService.getMeetingMinute(id).getContent();
 
         //System.out.println(meetingText);
 
@@ -145,7 +145,7 @@ public class ChatGptService {
             String title = extractSection("Meeting Title:", "**",  gptResponse);
             String summary = extractSection("Meeting Summary:", "---", gptResponse);
 
-            meetingMinuteService.updateMeetingMinute(id, title, meetingText, summary);
+            meetingMinuteService.updateMeetingMinute(id, title, summary);
             return new ChatGptDto.SummaryResponse(title, summary);
             //return chatGptResponse.getChoices().get(0).getMessage().getContent();
         } catch (NullPointerException | IndexOutOfBoundsException e) {

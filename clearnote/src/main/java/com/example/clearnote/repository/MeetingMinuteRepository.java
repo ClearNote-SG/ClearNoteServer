@@ -9,6 +9,6 @@ import org.springframework.data.jpa.repository.Query;
 public interface MeetingMinuteRepository extends JpaRepository<MeetingMinute, Long> {
 
     @Query("select new com.example.clearnote.dto.ResponseMeetingDto(m.id, m.title, m.createdAt) from MeetingMinute m"
-            + " where year(m.createdAt) = :year and month(m.createdAt) = :month")
-    List<ResponseMeetingDto> findMeetingMinutesOnlyId(int year, int month);
+            + " where year(m.createdAt) = :year and month(m.createdAt) = :month and day(m.createdAt) = :day")
+    List<ResponseMeetingDto> findMeetingMinutesOnlyId(int year, int month, int day);
 }
