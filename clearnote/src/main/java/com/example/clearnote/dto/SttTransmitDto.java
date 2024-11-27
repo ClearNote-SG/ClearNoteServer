@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 public class SttTransmitDto {
-
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

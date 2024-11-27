@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class SttTransmitController {
 
     private final SttTransmitService sttTransmitService;
-    //private final MeetingMinuteService meetingMinuteService;
 
     @PostMapping("/stt")
     public SttTransmitDto.SttResponse summarizeMeeting(

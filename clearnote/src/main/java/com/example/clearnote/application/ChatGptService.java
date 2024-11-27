@@ -1,11 +1,9 @@
 package com.example.clearnote.application;
 
 import com.example.clearnote.dto.ChatGptDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -26,7 +24,7 @@ public class ChatGptService {
     private final RestTemplate restTemplate;
     private final SttService sttService;
     private final MeetingMinuteService meetingMinuteService;
-    //private final String prompt = "아래 텍스트는 회의 음성 녹음을 텍스트로 바꾼 거야. 아래 파일은 해당 회의 내용을 기록할 회의록 양식 pdf 파일이야. 이 회의 내용을 회의록 양식에 있는 내용을 중심으로 요약해줘. 회의에서 나온 정보를 최대한 자세하게 기록해줘.\\n ";
+
     private final String prompt =
             "###Role###\n" +
             "You are an AI assistant that creates detailed, structured meeting summaries based on specific templates." +
@@ -117,10 +115,7 @@ public class ChatGptService {
     }
 
     public ChatGptDto.SummaryResponse summarizeMeeting(Long id, byte[] meetingAudio, MultipartFile meetingTemplate) {
-   //public ChatGptDto.SummaryResponse summarizeMeeting(String meetingText, MultipartFile meetingTemplate) {
         String meetingText = meetingMinuteService.getMeetingMinute(id).getContent();
-
-        //System.out.println(meetingText);
 
         String finalText = String.format(prompt, meetingText);
         String image = encodeFileToBase64Url(meetingTemplate);
@@ -147,7 +142,6 @@ public class ChatGptService {
 
             meetingMinuteService.updateMeetingMinute(id, title, summary);
             return new ChatGptDto.SummaryResponse(title, summary);
-            //return chatGptResponse.getChoices().get(0).getMessage().getContent();
         } catch (NullPointerException | IndexOutOfBoundsException e) {
             // 응답이 null이거나 비어있을 경우
             return new ChatGptDto.SummaryResponse("요약 요청 중 오류 발생: ", e.getMessage());

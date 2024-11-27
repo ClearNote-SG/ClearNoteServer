@@ -32,7 +32,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class SttService {
 
-
     private final String apiURL;
     private final RestTemplate restTemplate;
     private final Gson gson;

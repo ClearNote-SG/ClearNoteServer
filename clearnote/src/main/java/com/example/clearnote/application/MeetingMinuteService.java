@@ -3,7 +3,7 @@ package com.example.clearnote.application;
 import com.example.clearnote.dto.ResponseMeetingDto;
 import com.example.clearnote.entity.MeetingMinute;
 import com.example.clearnote.repository.MeetingMinuteRepository;
-import java.io.IOException;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+
 
 @Service
 @Transactional(readOnly = true)
