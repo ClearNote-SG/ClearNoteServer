@@ -4,13 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-public class ChatGptDto {
-
+public class SttTransmitDto {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class SummaryResponse {
-        private String meetingTitle;
-        private String meetingSummary;
+    public static class SttResponse {
+        private byte[] meetingAudio;
+        private String meetingContent;
     }
 }

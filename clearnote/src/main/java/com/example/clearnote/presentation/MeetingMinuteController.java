@@ -24,18 +24,25 @@ import org.springframework.web.multipart.MultipartFile;
 public class MeetingMinuteController {
     private final MeetingMinuteService meetingMinuteService;
 
-   /*@PostMapping
-    public ResponseEntity<MeetingMinute> addMeetingMinute(@RequestBody MultipartFile voiceFile)
-            throws IOException {
-        return ResponseEntity.ok(meetingMinuteService.upload(voiceFile));
-    };*/
+    @PostMapping
+    public ResponseEntity<Long> addMeetingMinute(@RequestBody MultipartFile voiceFile) {
+        Long id = meetingMinuteService.createMeetingMinute();
+        byte[] voiceByte = new byte[0];
+        try {
+            voiceByte = voiceFile.getBytes();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        meetingMinuteService.uploadVoice(id, voiceByte);
+        return ResponseEntity.ok(id);
+    }
 
-    @GetMapping("/{date}")
+    @GetMapping("/meetingByDate/{date}")
     public ResponseEntity<Map<Integer, List<ResponseMeetingDto>>> getAllMeetingMinutesByDate(@PathVariable LocalDate date) {
         return ResponseEntity.ok(meetingMinuteService.getAllMeetingMinutesByDayOfMonth(date));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/meetingById/{id}")
     public ResponseEntity<MeetingMinute> getMeetingMinute(@PathVariable Long id) {
         return ResponseEntity.ok(meetingMinuteService.getMeetingMinute(id));
     }
@@ -45,5 +52,4 @@ public class MeetingMinuteController {
         meetingMinuteService.deleteMeetingMinute(id);
         return ResponseEntity.ok("Meeting minute deleted successfully");
     }
-
 }

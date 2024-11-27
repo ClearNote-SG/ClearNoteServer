@@ -32,7 +32,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class SttService {
 
-
     private final String apiURL;
     private final RestTemplate restTemplate;
     private final Gson gson;
@@ -88,7 +87,7 @@ public class SttService {
     }
 
 
-    public String transcribe(MultipartFile meetingAudio) {
+    public String transcribe(byte[] meetingAudio, Long id) {
 
         clovaRequest clovaRequest = new clovaRequest();
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -97,11 +96,11 @@ public class SttService {
         String jsonParams = gson.toJson(clovaRequest);
         body.add("params", jsonParams);
 
-        File convFile = new File(Objects.requireNonNull(meetingAudio.getOriginalFilename()));
+        File convFile = new File("voice_"+id+".aac");
         try {
             convFile.createNewFile();
             FileOutputStream fos = new FileOutputStream(convFile);
-            fos.write(meetingAudio.getBytes());
+            fos.write(meetingAudio);
             fos.close();
         } catch (Exception e) {
             throw new RuntimeException(e);
